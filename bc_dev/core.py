@@ -25,9 +25,11 @@ from __future__ import division
 import datetime
 from threading import Lock
 from collections import Counter
-from bandicoot.helper.tools import Colors
-from bandicoot.helper.group import positions_binning, grouping_query
-import bandicoot as bc
+from bc_dev.helper.tools import Colors
+from bc_dev.helper.group import positions_binning, grouping_query
+import bc_dev as bc
+
+from pdb import set_trace as bp #for debug
 
 
 class Record(object):
@@ -49,17 +51,25 @@ class Record(object):
     position : Position
         The geographic position of the user at the time of the interaction.
     """
-    __slots__ = ['interaction', 'direction', 'correspondent_id',
-                 'datetime', 'call_duration', 'position']
 
-    def __init__(self, interaction=None, direction=None, correspondent_id=None,
-                 datetime=None, call_duration=None, position=None):
-        self.interaction = interaction
-        self.direction = direction
-        self.correspondent_id = correspondent_id
-        self.datetime = datetime
-        self.call_duration = call_duration
-        self.position = position
+    def __init__(self,**kwargs):
+
+        self.__slots__ = list(kwargs.keys())
+        for name,value in kwargs.items():
+            setattr(self,name,value)
+
+        if not hasattr(self,"direction"):
+            self.direction = None
+            self.__slots__.append("direction")
+
+        if not hasattr(self,"location"):
+            self.location = None
+            self.__slots__.append("location")
+
+        if not hasattr(self,"position"):
+            self.position = None
+            self.__slots__.append("position")
+
 
     def __repr__(self):
         attr = ["%s=%r" % (x, getattr(self, x)) for x in self.__slots__]
@@ -236,17 +246,17 @@ class User(object):
 
         # Reset the cache query for groups of records
         self.reset_cache()
+        self.interactions = list(set([r.interaction for r in self._records]))  
 
         for r in self._records:
-            if r.interaction == 'text':
-                self.has_text = True
-            elif r.interaction == 'call':
-                self.has_call = True
 
-            if r.position.type() == 'antenna':
+            if r.interaction is not None:
+                setattr(self,"has_"+ r.interaction,True)
+
+            if hasattr(r.position,"type") and r.position.type() == 'antenna':
                 self.has_antennas = True
 
-        self.recompute_home()
+        self.recompute_home() #SHOULD MAYBE BE REDEFINED!
 
     def recompute_missing_neighbors(self):
         """
@@ -363,6 +373,10 @@ class User(object):
             print(filled_box + "Has network")
         else:
             print(empty_box + "No network")
+
+        others = [i for i in self.__dict__.keys() if "has" in i and i not in ["has_call","has_text","has_antennas"]]
+        for o in others:
+            print(filled_box + "Has " + o[4:]) #E.g. "Has physical"
 
     def recompute_home(self):
         """

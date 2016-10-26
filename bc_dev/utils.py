@@ -20,11 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from bandicoot.helper.tools import OrderedDict
-from bandicoot.helper.group import group_records, group_records_with_padding
+from bc_dev.helper.tools import OrderedDict
+from bc_dev.helper.group import group_records, group_records_with_padding
 from functools import partial
 
-import bandicoot as bc
+import bc_dev as bc
+from pdb import set_trace as bp #for debug
+
 
 
 def flatten(d, parent_key='', separator='__'):
@@ -63,7 +65,7 @@ def flatten(d, parent_key='', separator='__'):
 
 def all(user, groupby='week', summary='default', network=False,
         split_week=False, split_day=False, filter_empty=True, attributes=True,
-        flatten=False):
+        flatten=False,show_all=True):
     """
     Returns a dictionary containing all bandicoot indicators for the user,
     as well as reporting variables.
@@ -224,8 +226,9 @@ def all(user, groupby='week', summary='default', network=False,
             metric = fun(user, groupby=groupby, datatype=datatype,
                          split_week=split_week, filter_empty=filter_empty,
                          split_day=split_day)
-
-        returned[fun.__name__] = metric
+        
+        if show(metric,show_all) is not None:
+            returned[fun.__name__] = metric
 
     if network and user.has_network:
         for fun in network_functions:
@@ -238,3 +241,17 @@ def all(user, groupby='week', summary='default', network=False,
         return globals()['flatten'](returned)
 
     return returned
+
+
+def show(metric,show_all):
+    """For helping whether or not the indicator should be shown.
+    If show_all = False, indicators which have "None" are not shown.
+    This is based on what the user has specified in 'all'."""
+
+    f = flatten(metric)
+    if show_all:
+        return metric
+    elif any(f.values()):
+        return metric
+
+    return None

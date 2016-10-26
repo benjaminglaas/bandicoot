@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from bandicoot.helper.maths import great_circle_distance
+from bc_dev.helper.maths import great_circle_distance
 import itertools
 
 

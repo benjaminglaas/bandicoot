@@ -32,9 +32,9 @@ except ImportError:
     import SocketServer
 
 
-from bandicoot.helper.tools import OrderedDict
-from bandicoot.helper.group import _group_range
-import bandicoot as bc
+from bc_dev.helper.tools import OrderedDict
+from bc_dev.helper.group import _group_range
+import bc_dev as bc
 import itertools
 
 
@@ -110,7 +110,10 @@ def user_data(user):
     def groupby_day_correspondent(r):
         return (r.datetime.strftime('%Y-%m-%d'), r.correspondent_id)
     it = itertools.groupby(user.records, groupby_day_correspondent)
-    export['network'] = [list(key) + [len(list(value))] for key, value in it]
+    try:
+        export['network'] = [list(key) + [len(list(value))] for key, value in it]
+    except(AttributeError):
+        raise AttributeError("'Correspondent id' not present in dataset. Visualization is not available.")
 
     return export
 

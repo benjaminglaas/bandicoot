@@ -26,6 +26,6 @@ from .io import read_csv, to_json, to_csv
 from .core import User, Record, Recharge, Position
 from . import individual, spatial, recharge, network, helper, utils, io, tests, core, visualization
 
-import bandicoot.helper.tools
+import bc_dev.helper.tools
 
 __version__ = "0.5.3"

@@ -32,7 +32,7 @@ import datetime
 from collections import defaultdict
 
 
-@grouping
+@grouping(interaction=['call','text','other'])
 def interevent_time(records):
     """
     The interevent time between two records of the user.
@@ -43,7 +43,7 @@ def interevent_time(records):
     return summary_stats(inter)
 
 
-@grouping
+@grouping(interaction=['call','text','other'])
 def number_of_contacts(records, direction=None, more=0):
     """
     The number of contacts the user interacted with.
@@ -63,7 +63,7 @@ def number_of_contacts(records, direction=None, more=0):
     return sum(1 for d in counter.values() if d > more)
 
 
-@grouping
+@grouping(interaction=['call','text','other'])
 def entropy_of_contacts(records, normalize=False):
     """
     The entropy of the user's contacts.
@@ -84,7 +84,7 @@ def entropy_of_contacts(records, normalize=False):
         return raw_entropy
 
 
-@grouping
+@grouping(interaction=['call','text','other'])
 def interactions_per_contact(records, direction=None):
     """
     The number of interactions a user had with each of its contacts.
@@ -115,7 +115,7 @@ def percent_initiated_interactions(records, user):
     return initiated / len(records)
 
 
-@grouping(user_kwd=True)
+@grouping(user_kwd=True,interaction=['call','text','other'])
 def percent_nocturnal(records, user):
     """
     The percentage of interactions the user had at night.
@@ -286,7 +286,7 @@ def response_delay_text(records):
     return summary_stats(delays)
 
 
-@grouping(interaction='callandtext')
+@grouping(interaction=['callandtext','other'])
 def percent_initiated_conversations(records):
     """
     The percentage of conversations that have been initiated by the user.
@@ -316,7 +316,7 @@ def percent_initiated_conversations(records):
     return init / total if total != 0 else 0
 
 
-@grouping(interaction='callandtext')
+@grouping(interaction=['callandtext','other'])
 def active_days(records):
     """
     The number of days during which the user was active. A user is considered
@@ -327,7 +327,7 @@ def active_days(records):
     return len(days)
 
 
-@grouping
+@grouping(interaction=['call','text','other'])
 def percent_pareto_interactions(records, percentage=0.8):
     """
     The percentage of user's contacts that account for 80% of its interactions.
@@ -347,7 +347,7 @@ def percent_pareto_interactions(records, percentage=0.8):
     return (len(user_count) - len(user_sort)) / len(records)
 
 
-@grouping(interaction='call')
+@grouping(interaction=['call','other'])
 def percent_pareto_durations(records, percentage=0.8):
     """
     The percentage of user's contacts that account for 80% of its total time
@@ -372,7 +372,7 @@ def percent_pareto_durations(records, percentage=0.8):
     return (len(user_count) - len(user_sort)) / len(records)
 
 
-@grouping
+@grouping(interaction=['call','text','other'])
 def balance_of_contacts(records, weighted=True):
     """
     The balance of interactions per contact. For every contact,
@@ -405,7 +405,7 @@ def balance_of_contacts(records, weighted=True):
     return summary_stats(balance)
 
 
-@grouping()
+@grouping(interaction=['call','text','other'])
 def number_of_interactions(records, direction=None):
     """
     The number of interactions.

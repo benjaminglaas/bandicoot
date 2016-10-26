@@ -26,9 +26,10 @@ from functools import partial
 from datetime import timedelta
 import itertools
 
-from bandicoot.helper.maths import mean, std, SummaryStats
-from bandicoot.helper.tools import advanced_wrap, AutoVivification, OrderedDict
+from bc_dev.helper.maths import mean, std, SummaryStats
+from bc_dev.helper.tools import advanced_wrap, AutoVivification, OrderedDict
 import numbers
+from pdb import set_trace as bp #for debug
 
 
 DATE_GROUPERS = {
@@ -117,7 +118,7 @@ def positions_binning(records):
 
     chunks = itertools.groupby(records, key=lambda r: get_key(r.datetime))
 
-    for _, items in chunks:
+    for _, items in chunks: #items is a list of records
         positions = [i.position for i in items]
         # Given the low number of positions per chunk of 30 minutes, and
         # the need for a deterministic value, we use max and not Counter
@@ -342,10 +343,13 @@ def grouping_query(user, query):
 
 def _generic_wrapper(f, user, operations, datatype):
     def compute_indicator(g):
-        if operations['apply']['user_kwd']:
-            return f(list(g), user, **operations['apply']['kwargs'])
-        else:
-            return f(list(g), **operations['apply']['kwargs'])
+        try:
+            if operations['apply']['user_kwd']:
+                return f(list(g), user, **operations['apply']['kwargs'])
+            else:
+                return f(list(g), **operations['apply']['kwargs'])
+        except(AttributeError):
+            return
 
     def map_and_apply(params_combinations):
         for params, groups in params_combinations:
@@ -358,6 +362,7 @@ def _generic_wrapper(f, user, operations, datatype):
                                summary=operations['apply']['summary'])
 
             yield list(params.values()), stats
+
 
     query = operations['grouping']
     groups = user._cached_grouping_query(query)
@@ -393,7 +398,7 @@ def divide_parameters(split_week, split_day, interaction):
         ])
 
 
-def grouping(f=None, interaction=['call', 'text'], summary='default',
+def grouping(f=None, interaction=['call','text'], summary='default',
              user_kwd=False):
     """
     ``grouping`` is a decorator for indicator functions, used to simplify the
@@ -427,8 +432,13 @@ def grouping(f=None, interaction=['call', 'text'], summary='default',
                 split_week=False, split_day=False, filter_empty=True,
                 datatype=None, **kwargs):
 
+        if 'other' in interaction:
+            interaction = user.interactions
+
         if interaction is None:
             interaction = ['call', 'text']
+
+
         parameters = divide_parameters(split_week, split_day, interaction)
 
         operations = {
@@ -444,12 +454,13 @@ def grouping(f=None, interaction=['call', 'text'], summary='default',
                 'kwargs': kwargs
             }
         }
-
-        for i in parameters['interaction']:
-            if i not in ['callandtext', 'call', 'text', 'location']:
-                raise ValueError("%s is not a valid interaction value. Only "
-                                 "'call', 'text', and 'location' are accepted."
-                                 % i)
+        
+        if 'other' not in interaction:
+            for i in parameters['interaction']:
+                if i not in ['callandtext', 'call', 'text', 'location']:
+                    raise ValueError("%s is not a valid interaction value. Only "
+                                     "'call', 'text', and 'location' are accepted."
+                                     % i)
 
         return _generic_wrapper(f, user, operations, datatype)
 
@@ -478,6 +489,7 @@ def spatial_grouping(f=None, user_kwd=False, summary='default',
                 'summary': summary,
                 'kwargs': kwargs
             }
+
         }
         return _generic_wrapper(f, user, operations, datatype)
 

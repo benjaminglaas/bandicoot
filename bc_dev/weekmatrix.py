@@ -22,9 +22,9 @@
 
 from __future__ import division
 
-import bandicoot as bc
-from bandicoot.helper.group import group_records
-from bandicoot.core import User, Record
+import bc_dev as bc
+from bc_dev.helper.group import group_records
+from bc_dev.core import User, Record
 
 from bisect import bisect_right
 from functools import partial

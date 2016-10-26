@@ -31,6 +31,8 @@ import hashlib
 import sys
 import os
 
+from pdb import set_trace as bp #for debug
+
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -90,6 +92,7 @@ def advanced_wrap(f, wrapper):
 
     decorated = eval(src, locals())
     decorated.func = f
+    
     return update_wrapper(decorated, f)
 
 
@@ -203,7 +206,9 @@ def percent_records_missing_location(user, method=None):
     if len(user.records) == 0:
         return 0.
 
-    missing_locations = sum([1 for record in user.records if record.position._get_location(user) is None])
+    #missing_locations = sum([1 for record in user.records if record.position._get_location(user) is None]) #ORIGINAL CODE
+    missing_locations = sum([1 for record in user.records if record.position is None])
+
     return float(missing_locations) / len(user.records)
 
 
@@ -238,8 +243,10 @@ def antennas_missing_locations(user, Method=None):
     """
     Return the number of antennas missing locations in the records of a given user.
     """
+    #unique_antennas = set([record.position.antenna for record in user.records
+                           #if record.position.antenna is not None]) ORIGINAL CODE
     unique_antennas = set([record.position.antenna for record in user.records
-                           if record.position.antenna is not None])
+                           if hasattr(record,"position.antenna") and record.position.antenna is not None])
     return sum([1 for antenna in unique_antennas if user.antennas.get(antenna) is None])
 
 

@@ -39,6 +39,8 @@ import time
 import csv
 import os
 
+from pdb import set_trace as bp #for debug
+
 log.getLogger().setLevel(log.WARN)
 log.getLogger().addHandler(ColorHandler())
 
@@ -177,14 +179,22 @@ def _parse_record(data, duration_format='seconds'):
 
         return antenna
 
-    return Record(interaction=data['interaction'] if data['interaction'] else None,
-                  direction=data['direction'],
-                  correspondent_id=data['correspondent_id'],
-                  datetime=_tryto(
+    r_dict = {}
+    for i in data.keys():
+        if i == "datetime":
+            r_dict[i] = _tryto(
                       lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"),
-                      data['datetime']),
-                  call_duration=_tryto(_map_duration, data['call_duration']),
-                  position=_tryto(_map_position, data))
+                      data['datetime'])
+        elif i == "call_duration":
+            r_dict[i] = _tryto(_map_duration, data['call_duration'])
+        elif i == "position":
+            r_dict[i] = _tryto(_map_position, data)
+        else:
+            r_dict[i] = data[i]
+
+
+
+    return Record(**r_dict)
 
 
 def _parse_recharge(data):
@@ -214,35 +224,37 @@ def filter_record(records):
 
     """
 
-    def scheme(r):
-        if r.interaction is None:
+    def scheme(rr):
+        
+        res = {}
+        for i in rr.__slots__:
+            if getattr(rr,i) is not None:
+                res[i] = True
+            elif i == "datetime":
+                res[i] = isinstance(rr.datetime, datetime)
+            else:
+                res[i] = False
+                
+        res["position"] = True
+        res["direction"] = True
+        res["location"] = True
+
+        if rr.interaction is None:
             call_duration_ok = True
-        elif r.interaction == 'call':
-            call_duration_ok = isinstance(r.call_duration, (int, float))
+        elif rr.interaction == 'call':
+            if hasattr(rr,'call_duration'):
+                call_duration_ok = isinstance(rr.call_duration, (int, float))
+            else:
+                call_duration_ok = True
         else:
             call_duration_ok = True
 
-        callandtext = r.interaction in ['call', 'text']
-        not_callandtext = not callandtext
+        res["call_duration"] = call_duration_ok
 
-        return {
-            'interaction': r.interaction in ['call', 'text', 'gps', None],
-            'direction': (not_callandtext and r.direction is None) or r.direction in ['in', 'out'],
-            'correspondent_id': not_callandtext or (r.correspondent_id not in [None, '']),
-            'datetime': isinstance(r.datetime, datetime),
-            'call_duration': call_duration_ok,
-            'location': callandtext or r.position.type() is not None
-        }
+        return res
 
-    ignored = OrderedDict([
-        ('all', 0),
-        ('interaction', 0),
-        ('direction', 0),
-        ('correspondent_id', 0),
-        ('datetime', 0),
-        ('call_duration', 0),
-        ('location', 0),
-    ])
+
+    ignored = OrderedDict([('all',0)])
 
     bad_records = []
 
@@ -250,6 +262,8 @@ def filter_record(records):
         for r in records:
             valid = True
             for key, valid_key in scheme(r).items():
+                if key not in ignored:
+                    ignored[key] = 0
                 if not valid_key:
                     ignored[key] += 1
                     bad_records.append(r)
@@ -597,7 +611,6 @@ def read_csv(user_id, records_path, antennas_path=None, attributes_path=None,
     if errors:
         return user, bad_records
     return user
-
 
 def read_orange(user_id, records_path, antennas_path=None,
                 attributes_path=None, recharges_path=None, network=False,

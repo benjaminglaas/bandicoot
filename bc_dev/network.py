@@ -26,8 +26,8 @@ from collections import Counter, defaultdict
 from itertools import groupby, combinations
 from functools import partial
 from datetime import datetime, timedelta
-from bandicoot.utils import all
-import bandicoot as bc
+from bc_dev.utils import all
+import bc_dev as bc
 
 import os
 import random

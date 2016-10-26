@@ -61,8 +61,11 @@ def radius_of_gyration(positions, user):
         Understanding individual human mobility patterns. Nature, 453(7196),
         779-782.
     """
-    d = Counter(p._get_location(user) for p in positions
-                if p._get_location(user) is not None)
+    try:
+        d = Counter(p._get_location(user) for p in positions
+                    if p._get_location(user) is not None)
+    except AttributeError:
+        return None
     sum_weights = sum(d.values())
     positions = list(d.keys())  # Unique positions
 

@@ -22,6 +22,7 @@
 
 from __future__ import division
 import math
+from pdb import set_trace as bp #for debug
 
 
 def mean(data):
@@ -181,8 +182,7 @@ def summary_stats(data):
     >>> summary_stats([0, 1])
     SummaryStats(mean=0.5, std=0.5, min=0.0, max=1.0, median=0.5, skewness=0.0, kurtosis=1.0, distribution=[0, 1])
     """
-
-    if data is None:
+    if data is None or all(x is None for x in data):
         data = []
     data = sorted(data)
 
