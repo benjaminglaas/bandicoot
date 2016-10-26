@@ -23,10 +23,11 @@
 from bc_dev.helper.tools import OrderedDict
 from bc_dev.helper.group import group_records, group_records_with_padding
 from functools import partial
+import logging as log
+from .helper.tools import ColorHandler
 
 import bc_dev as bc
 from pdb import set_trace as bp #for debug
-
 
 
 def flatten(d, parent_key='', separator='__'):
@@ -65,7 +66,7 @@ def flatten(d, parent_key='', separator='__'):
 
 def all(user, groupby='week', summary='default', network=False,
         split_week=False, split_day=False, filter_empty=True, attributes=True,
-        flatten=False,show_all=True):
+        flatten=False,show_all=True,warnings=False):
     """
     Returns a dictionary containing all bandicoot indicators for the user,
     as well as reporting variables.
@@ -98,6 +99,7 @@ def all(user, groupby='week', summary='default', network=False,
     percent_outofnetwork_call_durations percentage of minutes of calls where the contact was not loaded in the network
     number_of_records                   total number of records
     number_of_weeks                     number of weeks with records
+    none_functions                      list of functions that only returned 'None'
     =================================== =======================================================================
 
     We also include a last set of reporting variables, for the records ignored
@@ -118,6 +120,9 @@ def all(user, groupby='week', summary='default', network=False,
     with the total number of records ignored (key ``'all'``), as well as the
     number of records with faulty values for each columns.
     """
+    #The 'warnings' parameter determines whether or not the user wants warnings about functions that only returned 'None's,
+    #and whether or not it should be returned from the function.
+
     scalar_type = 'distribution_scalar' if groupby is not None else 'scalar'
     summary_type = 'distribution_summarystats' if groupby is not None else 'summarystats'
 
@@ -217,6 +222,7 @@ def all(user, groupby='week', summary='default', network=False,
         ('reporting', reporting)
     ])
 
+    none_metrics = []
     for fun, datatype in functions:
         try:
             metric = fun(user, groupby=groupby, summary=summary,
@@ -227,8 +233,15 @@ def all(user, groupby='week', summary='default', network=False,
                          split_week=split_week, filter_empty=filter_empty,
                          split_day=split_day)
         
-        if show(metric,show_all) is not None:
+        if show_all:
             returned[fun.__name__] = metric
+            if isNone(metric):
+                none_metrics.append(fun.__name__)
+        else:
+            if isNone(metric):
+                none_metrics.append(fun.__name__)
+            else:
+                returned[fun.__name__] = metric
 
     if network and user.has_network:
         for fun in network_functions:
@@ -240,18 +253,22 @@ def all(user, groupby='week', summary='default', network=False,
     if flatten is True:
         return globals()['flatten'](returned)
 
+    if warnings and len(none_metrics)!=0:
+        returned["none_functions"] = none_metrics
+        w = "{} functions that only returned 'None' \n".format(len(none_metrics))
+        for nones in none_metrics:
+            w += nones + "\n"
+        log.warn(w)
+
     return returned
 
 
-def show(metric,show_all):
-    """For helping whether or not the indicator should be shown.
-    If show_all = False, indicators which have "None" are not shown.
-    This is based on what the user has specified in 'all'."""
-
+def isNone(metric):
+    """For helping whether or not the indicator returns 'None'.
+    If show_all = False, indicators which have 'None' are not shown."""
     f = flatten(metric)
-    if show_all:
-        return metric
-    elif any(f.values()):
-        return metric
-
-    return None
+    values = list(f.values())
+    if any(values):
+        return False
+    
+    return True
