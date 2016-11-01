@@ -241,13 +241,8 @@ def filter_record(records):
 
         if rr.interaction is None:
             duration_ok = True
-        elif rr.interaction == 'call':
-            if hasattr(rr,'duration'):
-                duration_ok = isinstance(rr.duration, (int, float))
-            else:
-                duration_ok = True
-        else:
-            duration_ok = True
+        elif hasattr(rr,'duration'):
+            duration_ok = isinstance(rr.duration, (int, float))
 
         res["duration"] = duration_ok
 
