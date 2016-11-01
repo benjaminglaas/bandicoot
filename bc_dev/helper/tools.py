@@ -233,7 +233,7 @@ def percent_overlapping_calls(records, min_gab=300):
     overlapping_calls = 0
     for i, r in enumerate(calls):
         if i <= len(calls) - 2:
-            if r.datetime + timedelta(seconds=r.call_duration - min_gab) >= calls[i + 1].datetime:
+            if r.datetime + timedelta(seconds=r.duration - min_gab) >= calls[i + 1].datetime:
                 overlapping_calls += 1
 
     return (float(overlapping_calls) / len(calls))

@@ -28,6 +28,7 @@ from collections import Counter
 from bc_dev.helper.tools import Colors
 from bc_dev.helper.group import positions_binning, grouping_query
 import bc_dev as bc
+import logging as log
 
 from pdb import set_trace as bp #for debug
 
@@ -337,12 +338,18 @@ class User(object):
                    " from %s to %s" % (self.start_time, self.end_time)))
 
         nb_contacts = bc.individual.number_of_contacts(
-            self, interaction='callandtext', groupby=None)
-        nb_contacts = nb_contacts['allweek']['allday']['callandtext']
-        if nb_contacts:
-            print(filled_box + format_int("contacts", nb_contacts))
-        else:
-            print(empty_box + "No contacts")
+            self, interaction=['other'], groupby=None)
+
+        nb_contacts = nb_contacts['allweek']['allday']
+
+        #Contacts are not unique!
+        for i in nb_contacts:
+            if nb_contacts[i]:
+                print(filled_box + format_int("contacts", nb_contacts[i]) + " " + i)
+            else:
+                print(empty_box + "No contacts for " + i)
+        if len(nb_contacts) > 1:
+            log.warn("Contacts may overlap!")
 
         if self.has_attributes:
             print(filled_box + format_int("attributes", len(self.attributes)))

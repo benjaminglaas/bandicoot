@@ -187,6 +187,8 @@ def _parse_record(data, duration_format='seconds'):
                       data['datetime'])
         elif i == "duration":
             r_dict[i] = _tryto(_map_duration, data['duration'])
+        elif i == "call_duration":
+            r_dict[i] = _tryto(_map_duration, data['call_duration'])
         elif i == "position":
             r_dict[i] = _tryto(_map_position, data)
         else:
@@ -241,8 +243,13 @@ def filter_record(records):
 
         if rr.interaction is None:
             duration_ok = True
-        elif hasattr(rr,'duration'):
-            duration_ok = isinstance(rr.duration, (int, float))
+        elif rr.interaction == 'call':
+            if hasattr(rr,'duration'):
+                duration_ok = isinstance(rr.duration, (int, float))
+            else:
+                duration_ok = True
+        else:
+            duration_ok = True
 
         res["duration"] = duration_ok
 

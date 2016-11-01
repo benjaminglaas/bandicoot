@@ -455,12 +455,6 @@ def grouping(f=None, interaction=['call','text'], summary='default',
             }
         }
         
-        '''
-            for i in parameters['interaction']:
-                if i not in ['callandtext', 'call', 'text', 'location']:
-                    raise ValueError("%s is not a valid interaction value. Only "
-                                     "'call', 'text', and 'location' are accepted."
-                                     % i)'''
 
         return _generic_wrapper(f, user, operations, datatype)
 
