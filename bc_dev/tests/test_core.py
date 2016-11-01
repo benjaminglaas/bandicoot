@@ -21,10 +21,10 @@
 # SOFTWARE.
 
 """
-Tests for bandicoot.core (User, Position, and Record classes)
+Tests for bc_dev.core (User, Position, and Record classes)
 """
 
-import bandicoot as bc
+import bc_dev as bc
 from .testing_tools import parse_dict
 
 import unittest

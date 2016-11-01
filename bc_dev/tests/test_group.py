@@ -21,17 +21,17 @@
 # SOFTWARE.
 
 """
-Test for the bandicoot.helper.group module.
+Test for the bc_dev.helper.group module.
 """
 
-import bandicoot as bc
-from bandicoot.core import Record, Position
+import bc_dev as bc
+from bc_dev.core import Record, Position
 from datetime import datetime as dt
 import unittest
 
-from bandicoot.tests.generate_user import random_burst
-from bandicoot.helper.group import group_records
-from bandicoot.helper.maths import std, mean, SummaryStats
+from bc_dev.tests.generate_user import random_burst
+from bc_dev.helper.group import group_records
+from bc_dev.helper.maths import std, mean, SummaryStats
 from datetime import timedelta
 import numpy as np
 import os
@@ -199,7 +199,7 @@ class MissingTests(unittest.TestCase):
             'direction': 2,
             'correspondent_id': 0,
             'datetime': 0,
-            'call_duration': 1,
+            'duration': 1,
             'location': 0
         }
         self.assertDictEqual(self.user.ignored_records, result)

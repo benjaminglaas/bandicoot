@@ -46,7 +46,7 @@ class Record(object):
         A unique identifier for the corresponding contact
     datetime : datetime
         The exact date and time of the interaction
-    call_duration : int or None
+    duration : int or None
         Durations of the call in seconds. None if the record is a text message.
     position : Position
         The geographic position of the user at the time of the interaction.
@@ -54,9 +54,14 @@ class Record(object):
 
     def __init__(self,**kwargs):
 
-        self.__slots__ = list(kwargs.keys())
+        self.__slots__ = []
         for name,value in kwargs.items():
-            setattr(self,name,value)
+            if name == "call_duration":
+                setattr(self,"duration",value)
+                self.__slots__.append("duration")
+            else:
+                setattr(self,name,value)
+                self.__slots__.append(name)
 
         if not hasattr(self,"direction"):
             self.direction = None
@@ -86,11 +91,11 @@ class Record(object):
     def matches(self, other):
         """
         Return true if two records 'match': if they share the same values for
-        ``interaction``, ``direction``, ``call_duration``, and ``datetime``.
+        ``interaction``, ``direction``, ``duration``, and ``datetime``.
         """
         return self.interaction == other.interaction and \
             self.direction != other.direction and \
-            self.call_duration == other.call_duration and \
+            self.duration == other.duration and \
             abs((self.datetime - other.datetime).total_seconds()) < 30
 
     def all_matches(self, iterable):
@@ -197,7 +202,7 @@ class User(object):
         self.percent_outofnetwork_calls = 0
         self.percent_outofnetwork_texts = 0
         self.percent_outofnetwork_contacts = 0
-        self.percent_outofnetwork_call_durations = 0
+        self.percent_outofnetwork_durations = 0
 
         self.network = {}
 
@@ -266,7 +271,7 @@ class User(object):
         - ``User.percent_outofnetwork_calls``
         - ``User.percent_outofnetwork_texts``
         - ``User.percent_outofnetwork_contacts``
-        - ``User.percent_outofnetwork_call_durations``
+        - ``User.percent_outofnetwork_durations``
 
         This function is automatically called from :meth:`~bandicoot.io.read_csv`
         when loading a network user.
@@ -279,14 +284,14 @@ class User(object):
         num_oon_texts = len(
             [r for r in oon_records if r.interaction == 'text'])
         num_oon_neighbors = len(set(x.correspondent_id for x in oon_records))
-        oon_call_durations = sum(
-            [r.call_duration for r in oon_records if r.interaction == 'call'])
+        oon_durations = sum(
+            [r.duration for r in oon_records if r.interaction == 'call'])
 
         num_calls = len([r for r in self.records if r.interaction == 'call'])
         num_texts = len([r for r in self.records if r.interaction == 'text'])
         total_neighbors = len(set(x.correspondent_id for x in self.records))
-        total_call_durations = sum(
-            [r.call_duration for r in self.records if r.interaction == 'call'])
+        total_durations = sum(
+            [r.duration for r in self.records if r.interaction == 'call'])
 
         def _safe_div(a, b, default):
             return a / b if b != 0 else default
@@ -298,8 +303,8 @@ class User(object):
             num_oon_texts, num_texts, 0)
         self.percent_outofnetwork_contacts = _safe_div(
             num_oon_neighbors, total_neighbors, 0)
-        self.percent_outofnetwork_call_durations = _safe_div(
-            oon_call_durations, total_call_durations, 0)
+        self.percent_outofnetwork_durations = _safe_div(
+            oon_durations, total_durations, 0)
 
     def describe(self):
         """

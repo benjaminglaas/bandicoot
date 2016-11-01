@@ -24,7 +24,7 @@
 Test manual user files, made by real humans, with all metrics handcrafted.
 """
 
-import bandicoot as bc
+import bc_dev as bc
 import unittest
 from .testing_tools import parse_dict, metric_suite
 import os

@@ -25,7 +25,7 @@ from __future__ import division
 import unittest
 import os
 
-import bandicoot as bc
+import bc_dev as bc
 import numpy as np
 
 

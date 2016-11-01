@@ -28,9 +28,9 @@ import math
 import csv
 import copy
 
-from bandicoot.core import Record, Position
-import bandicoot as bc
-from bandicoot.helper.tools import OrderedDict
+from bc_dev.core import Record, Position
+import bc_dev as bc
+from bc_dev.helper.tools import OrderedDict
 
 
 def _choice(seq):
@@ -75,10 +75,10 @@ def random_record(**kwargs):
          'interaction': _choice(['text', 'text', 'text', 'call', 'call']),
          'correspondent_id': "correspondent_{}".format(correspondent),
          'direction': _choice(['in', 'in', 'out']),
-         'call_duration': int(random.random() * 1000),
+         'duration': int(random.random() * 1000),
          'position': Position(location=(_uniform(-5, 5), _uniform(-5, 5)))}
     if r['interaction'] == "text":
-        r['call_duration'] = None
+        r['duration'] = None
 
     r.update(kwargs)
     return Record(**r)
@@ -190,7 +190,7 @@ def write_new_user(filepath, n=1960):
     user = sample_user(n)
 
     schema = ['interaction', 'direction', 'correspondent_id',
-              'datetime', 'call_duration', 'antenna_id']
+              'datetime', 'duration', 'antenna_id']
     with open(filepath, "wb") as new_user:
         w = csv.writer(new_user)
         w.writerow(schema)

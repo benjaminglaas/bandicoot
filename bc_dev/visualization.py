@@ -74,7 +74,7 @@ def user_data(user):
         I('nb_all', iv.number_of_interactions, 'callandtext'),
         I('response_delay', iv.response_delay_text, 'callandtext'),
         I('response_rate', iv.response_rate_text, 'callandtext'),
-        I('call_duration', iv.call_duration, 'call'),
+        I('duration', iv.duration, 'call'),
         I('percent_initiated_interactions', iv.percent_initiated_interactions, 'call'),
         I('percent_initiated_conversations', iv.percent_initiated_interactions, 'callandtext'),
         I('active_day', iv.active_days, 'callandtext'),

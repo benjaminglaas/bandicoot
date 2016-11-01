@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 import json
-import bandicoot as bc
+import bc_dev as bc
 import numpy as np
 
 

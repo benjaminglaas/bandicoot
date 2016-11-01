@@ -134,10 +134,10 @@ def percent_nocturnal(records, user):
     return sum(1 for r in records if night_filter(r.datetime)) / len(records)
 
 
-@grouping(interaction='call')
-def call_duration(records, direction=None):
+@grouping(interaction=['call','other'])
+def duration(records, direction=None):
     """
-    The duration of the user's calls.
+    The duration of the user's interactions.
 
     Parameters
     ----------
@@ -146,11 +146,11 @@ def call_duration(records, direction=None):
         ``'in'`` for incoming, and ``'out'`` for outgoing.
     """
     if direction is None:
-        call_durations = [r.call_duration for r in records]
+        durations = [r.duration for r in records]
     else:
-        call_durations = [r.call_duration for r in records if r.direction == direction]
+        durations = [r.duration for r in records if r.direction == direction]
 
-    return summary_stats(call_durations)
+    return summary_stats(durations)
 
 
 def _conversations(group, delta=datetime.timedelta(hours=1)):
@@ -347,7 +347,7 @@ def percent_pareto_interactions(records, percentage=0.8):
     return (len(user_count) - len(user_sort)) / len(records)
 
 
-@grouping(interaction=['call','other'])
+@grouping(interaction=['call'])
 def percent_pareto_durations(records, percentage=0.8):
     """
     The percentage of user's contacts that account for 80% of its total time
@@ -360,7 +360,7 @@ def percent_pareto_durations(records, percentage=0.8):
     user_count = defaultdict(int)
     for r in records:
         if r.interaction == "call":
-            user_count[r.correspondent_id] += r.call_duration
+            user_count[r.correspondent_id] += r.duration
 
     target = int(math.ceil(sum(user_count.values()) * percentage))
     user_sort = sorted(user_count.keys(), key=lambda x: user_count[x])

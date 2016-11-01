@@ -21,8 +21,8 @@
 # SOFTWARE.
 
 import unittest
-import bandicoot as bc
-from bandicoot.tests.generate_user import random_burst
+import bc_dev as bc
+from bc_dev.tests.generate_user import random_burst
 
 from datetime import timedelta
 

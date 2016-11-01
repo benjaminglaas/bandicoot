@@ -24,8 +24,8 @@
 Test the import of CSV files.
 """
 
-import bandicoot as bc
-from bandicoot.core import Record, Position
+import bc_dev as bc
+from bc_dev.core import Record, Position
 from datetime import datetime as dt
 import unittest
 import os
@@ -64,7 +64,7 @@ class TestParsers(unittest.TestCase):
                                 direction='in',
                                 correspondent_id='770000001',
                                 datetime=dt(2013, 12, 16, 5, 39, 30),
-                                call_duration=0,
+                                duration=0,
                                 position=Position('13084', None)))
 
         result = {'allweek': {'allday': None}}
@@ -80,7 +80,7 @@ class TestParsers(unittest.TestCase):
                                 direction='in',
                                 correspondent_id='770000001',
                                 datetime=dt(2013, 12, 16, 5, 39, 30),
-                                call_duration=0,
+                                duration=0,
                                 position=Position('13084', None)))
 
         radius = bc.spatial.radius_of_gyration(user, groupby=None)
@@ -94,7 +94,7 @@ class TestParsers(unittest.TestCase):
                                 direction='in',
                                 correspondent_id='770000001',
                                 datetime=dt(2013, 12, 16, 5, 39, 30),
-                                call_duration=0,
+                                duration=0,
                                 position=Position()))
 
     def test_read_csv_attributes(self):
@@ -110,24 +110,24 @@ class TestParsers(unittest.TestCase):
     def test_read_duration_format(self):
         raw = {
             'antenna_id': '11201|11243',
-            'call_duration': '873',
+            'duration': '873',
             'correspondent_id': 'A',
             'datetime': '2014-06-01 01:00:00',
             'direction': 'out',
             'interaction': 'call'
         }
 
-        rv = bc.io._parse_record(raw, duration_format='seconds').call_duration
+        rv = bc.io._parse_record(raw, duration_format='seconds').duration
         self.assertEqual(rv, 873)
 
-        raw['call_duration'] = '00:14:33'
-        rv = bc.io._parse_record(raw, duration_format='%H:%M:%S').call_duration
+        raw['duration'] = '00:14:33'
+        rv = bc.io._parse_record(raw, duration_format='%H:%M:%S').duration
         self.assertEqual(rv, 873)
 
-        raw['call_duration'] = '1433'
-        rv = bc.io._parse_record(raw, duration_format='%M%S').call_duration
+        raw['duration'] = '1433'
+        rv = bc.io._parse_record(raw, duration_format='%M%S').duration
         self.assertEqual(rv, 873)
 
-        raw['call_duration'] = ''
-        rv = bc.io._parse_record(raw, duration_format='seconds').call_duration
+        raw['duration'] = ''
+        rv = bc.io._parse_record(raw, duration_format='seconds').duration
         self.assertEqual(rv, None)

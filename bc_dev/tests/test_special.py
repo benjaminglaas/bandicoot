@@ -24,8 +24,8 @@
 Test special non-core functionality such as the generation of punchcards.
 """
 
-import bandicoot as bc
-from bandicoot.weekmatrix import create_weekmatrices, to_csv
+import bc_dev as bc
+from bc_dev.weekmatrix import create_weekmatrices, to_csv
 from .testing_tools import file_equality
 
 import tempfile

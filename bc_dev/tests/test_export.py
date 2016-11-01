@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import bandicoot as bc
+import bc_dev as bc
 import unittest
 from .testing_tools import file_equality
 import tempfile

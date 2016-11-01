@@ -185,8 +185,8 @@ def _parse_record(data, duration_format='seconds'):
             r_dict[i] = _tryto(
                       lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"),
                       data['datetime'])
-        elif i == "call_duration":
-            r_dict[i] = _tryto(_map_duration, data['call_duration'])
+        elif i == "duration":
+            r_dict[i] = _tryto(_map_duration, data['duration'])
         elif i == "position":
             r_dict[i] = _tryto(_map_position, data)
         else:
@@ -240,16 +240,16 @@ def filter_record(records):
         res["location"] = True
 
         if rr.interaction is None:
-            call_duration_ok = True
+            duration_ok = True
         elif rr.interaction == 'call':
-            if hasattr(rr,'call_duration'):
-                call_duration_ok = isinstance(rr.call_duration, (int, float))
+            if hasattr(rr,'duration'):
+                duration_ok = isinstance(rr.duration, (int, float))
             else:
-                call_duration_ok = True
+                duration_ok = True
         else:
-            call_duration_ok = True
+            duration_ok = True
 
-        res["call_duration"] = call_duration_ok
+        res["duration"] = duration_ok
 
         return res
 
@@ -562,7 +562,7 @@ def read_csv(user_id, records_path, antennas_path=None, attributes_path=None,
     -----
     - The csv files can be single, or double quoted if needed.
     - Empty cells are filled with ``None``. For example, if the column
-      ``call_duration`` is empty for one record, its value will be ``None``.
+      ``duration`` is empty for one record, its value will be ``None``.
       Other values such as ``"N/A"``, ``"None"``, ``"null"`` will be
       considered as a text.
     """
@@ -618,7 +618,7 @@ def read_orange(user_id, records_path, antennas_path=None,
     """
     Load user records from a CSV file in *orange* format:
 
-    ``call_record_type;basic_service;user_msisdn;call_partner_identity;datetime;call_duration;longitude;latitude``
+    ``call_record_type;basic_service;user_msisdn;call_partner_identity;datetime;duration;longitude;latitude``
 
     ``basic_service`` takes one of the following values:
 
@@ -667,8 +667,8 @@ def read_orange(user_id, records_path, antennas_path=None,
                 'basic_service'] in ['11', '12'] else 'text'
             contact = row['call_partner_identity']
             date = datetime.strptime(row['datetime'], "%Y-%m-%d %H:%M:%S")
-            call_duration = float(row['call_duration']) if row[
-                'call_duration'] != "" else None
+            duration = float(row['duration']) if row[
+                'duration'] != "" else None
             lon, lat = float(row['longitude']), float(row['latitude'])
             latlon = (lat, lon)
 
@@ -686,7 +686,7 @@ def read_orange(user_id, records_path, antennas_path=None,
             record = Record(direction=direction,
                             interaction=interaction,
                             correspondent_id=contact,
-                            call_duration=call_duration,
+                            duration=duration,
                             datetime=date,
                             position=position)
             records.append(record)
@@ -695,7 +695,7 @@ def read_orange(user_id, records_path, antennas_path=None,
 
     user_records = os.path.join(records_path, user_id + ".csv")
     fields = ['call_record_type', 'basic_service', 'user_msisdn',
-              'call_partner_identity', 'datetime', 'call_duration',
+              'call_partner_identity', 'datetime', 'duration',
               'longitude', 'latitude']
 
     with open(user_records, 'r') as f:
@@ -803,7 +803,7 @@ def read_telenor(incoming_cdr, outgoing_cdr, cell_towers, describe=True,
         r = Record(interaction='call',
                    direction=direction,
                    correspondent_id=contact,
-                   call_duration=float(raw['DURATION'].strip()),
+                   duration=float(raw['DURATION'].strip()),
                    datetime=_datetime,
                    position=position)
 

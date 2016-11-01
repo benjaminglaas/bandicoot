@@ -96,7 +96,7 @@ def all(user, groupby='week', summary='default', network=False,
     percent_outofnetwork_calls          percentage of calls, received or emitted, made with a correspondant not loaded in the network
     percent_outofnetwork_texts          percentage of texts with contacts not loaded in the network
     percent_outofnetwork_contacts       percentage of contacts not loaded in the network
-    percent_outofnetwork_call_durations percentage of minutes of calls where the contact was not loaded in the network
+    percent_outofnetwork_durations percentage of minutes of calls where the contact was not loaded in the network
     number_of_records                   total number of records
     number_of_weeks                     number of weeks with records
     none_functions                      list of functions that only returned 'None'
@@ -114,7 +114,7 @@ def all(user, groupby='week', summary='default', network=False,
             'direction': 0,
             'correspondent_id': 0,
             'datetime': 0,
-            'call_duration': 0
+            'duration': 0
         }
 
     with the total number of records ignored (key ``'all'``), as well as the
@@ -134,7 +134,7 @@ def all(user, groupby='week', summary='default', network=False,
     functions = [
         (bc.individual.active_days, scalar_type),
         (bc.individual.number_of_contacts, scalar_type),
-        (bc.individual.call_duration, summary_type),
+        (bc.individual.duration, summary_type),
         (bc.individual.percent_nocturnal, scalar_type),
         (bc.individual.percent_initiated_conversations, scalar_type),
         (bc.individual.percent_initiated_interactions, scalar_type),
@@ -211,7 +211,7 @@ def all(user, groupby='week', summary='default', network=False,
         ('percent_outofnetwork_calls', user.percent_outofnetwork_calls),
         ('percent_outofnetwork_texts', user.percent_outofnetwork_texts),
         ('percent_outofnetwork_contacts', user.percent_outofnetwork_contacts),
-        ('percent_outofnetwork_call_durations', user.percent_outofnetwork_call_durations),
+        ('percent_outofnetwork_durations', user.percent_outofnetwork_durations),
     ])
 
     if user.ignored_records is not None:

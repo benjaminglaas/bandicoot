@@ -21,10 +21,10 @@
 # SOFTWARE.
 
 """
-Test the unweighted and weighted clustering methods from bandicoot.network.
+Test the unweighted and weighted clustering methods from bc_dev.network.
 """
 
-import bandicoot as bc
+import bc_dev as bc
 import unittest
 import os
 import networkx as nx

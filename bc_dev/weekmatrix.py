@@ -66,9 +66,9 @@ def create_weekmatrices(user, split_interval=60):
                        direction='in', interaction='text', summary=None)
     texts_out = partial(bc.individual.number_of_interactions,
                         direction='out', interaction='text', summary=None)
-    time_spent_in = partial(bc.individual.call_duration,
+    time_spent_in = partial(bc.individual.duration,
                             direction='in', interaction='call', summary=None)
-    time_spent_out = partial(bc.individual.call_duration,
+    time_spent_out = partial(bc.individual.duration,
                              direction='out', interaction='call', summary=None)
 
     core_func = [
@@ -242,7 +242,7 @@ def _transform_to_time_spent(records, split_interval, sections):
     """
     Each call that crosses a boundary of the sections in the week-matrix is
     split. These new records contain the amount of time
-    (in record.call_duration) spent talking in that specific section.
+    (in record.duration) spent talking in that specific section.
     """
 
     t_records = []
@@ -250,8 +250,8 @@ def _transform_to_time_spent(records, split_interval, sections):
 
     # contrary to the rest of the binning process, this is done with second
     # precision
-    for r in filter(lambda rec: rec.interaction == 'call' and rec.call_duration > 0, records):
-        t_left = r.call_duration
+    for r in filter(lambda rec: rec.interaction == 'call' and rec.duration > 0, records):
+        t_left = r.duration
         t_to_next_section = _seconds_to_section_split(r, sections)
         t_spent_total = 0
 

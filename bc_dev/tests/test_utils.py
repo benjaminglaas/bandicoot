@@ -21,10 +21,10 @@
 # SOFTWARE.
 
 """
-Test the bandicoot.utils module, mostly using the numpy library.
+Test the bc_dev.utils module, mostly using the numpy library.
 """
 
-import bandicoot as bc
+import bc_dev as bc
 import unittest
 from scipy import stats
 import numpy as np
@@ -149,7 +149,7 @@ class TestUtils(unittest.TestCase):
     def test_percent_overlap(self):
         raw = {
             'antenna_id': '11201|11243',
-            'call_duration': '600', 'correspondent_id': 'A',
+            'duration': '600', 'correspondent_id': 'A',
             'datetime': '2014-06-01 01:00:00',
             'direction': 'out', 'interaction': 'call'
         }
