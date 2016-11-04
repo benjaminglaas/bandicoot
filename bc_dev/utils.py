@@ -25,6 +25,7 @@ from bc_dev.helper.group import group_records, group_records_with_padding
 from functools import partial
 import logging as log
 from .helper.tools import ColorHandler
+from .helper.group import grouping
 
 import bc_dev as bc
 from pdb import set_trace as bp #for debug
@@ -66,7 +67,7 @@ def flatten(d, parent_key='', separator='__'):
 
 def all(user, groupby='week', summary='default', network=False,
         split_week=False, split_day=False, filter_empty=True, attributes=True,
-        flatten=False,show_all=True,warnings=False):
+        flatten=False,show_all=True,warnings=False, new_indicators = []):
     """
     Returns a dictionary containing all bandicoot indicators for the user,
     as well as reporting variables.
@@ -156,6 +157,7 @@ def all(user, groupby='week', summary='default', network=False,
         (bc.spatial.frequent_antennas, scalar_type),
         (bc.spatial.churn_rate, scalar_type)
     ]
+    
 
     if user.has_recharges:
         functions += [
@@ -243,6 +245,30 @@ def all(user, groupby='week', summary='default', network=False,
             else:
                 returned[fun.__name__] = metric
 
+    if type(new_indicators) is not list:
+        new_indicators = [new_indicators]
+
+    for fun in new_indicators:
+        try:
+            metric = newIndicatorWrapper(fun)(user, groupby=groupby, summary=summary,
+                         datatype=scalar_type, filter_empty=filter_empty,
+                         split_week=split_week, split_day=split_day)
+        except ValueError:
+            metric = newIndicatorWrapper(fun)(user, groupby=groupby, datatype=scalar_type,
+                         split_week=split_week, filter_empty=filter_empty,
+                         split_day=split_day)
+        
+        if show_all:
+            returned[fun.__name__] = metric
+            if isNone(metric):
+                none_metrics.append(fun.__name__)
+        else:
+            if isNone(metric):
+                none_metrics.append(fun.__name__)
+            else:
+                returned[fun.__name__] = metric
+
+
     if network and user.has_network:
         for fun in network_functions:
             returned[fun.__name__] = fun(user)
@@ -272,3 +298,8 @@ def isNone(metric):
         return False
     
     return True
+
+def newIndicatorWrapper(fun):
+    """Wrapper function for custom made indicators"""
+    return grouping(f=fun,interaction='other')
+

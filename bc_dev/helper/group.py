@@ -438,7 +438,6 @@ def grouping(f=None, interaction=['call','text'], summary='default',
         if interaction is None:
             interaction = ['call', 'text']
 
-
         parameters = divide_parameters(split_week, split_day, interaction)
 
         operations = {
