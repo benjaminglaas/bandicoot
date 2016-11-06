@@ -216,6 +216,12 @@ def all(user, groupby='week', summary='default', network=False,
         ('percent_outofnetwork_durations', user.percent_outofnetwork_durations),
     ])
 
+    if type(new_indicators) is not list and new_indicators:
+        new_indicators = [new_indicators]
+
+    for i in new_indicators:
+        functions.append((i,None))
+    
     if user.ignored_records is not None:
         reporting['ignored_records'] = OrderedDict(user.ignored_records)
 
@@ -225,49 +231,46 @@ def all(user, groupby='week', summary='default', network=False,
     ])
 
     none_metrics = []
+
     for fun, datatype in functions:
-        try:
-            metric = fun(user, groupby=groupby, summary=summary,
-                         datatype=datatype, filter_empty=filter_empty,
-                         split_week=split_week, split_day=split_day)
-        except ValueError:
-            metric = fun(user, groupby=groupby, datatype=datatype,
-                         split_week=split_week, filter_empty=filter_empty,
-                         split_day=split_day)
-        
-        if show_all:
-            returned[fun.__name__] = metric
-            if isNone(metric):
-                none_metrics.append(fun.__name__)
-        else:
-            if isNone(metric):
-                none_metrics.append(fun.__name__)
-            else:
-                returned[fun.__name__] = metric
-
-    if type(new_indicators) is not list:
-        new_indicators = [new_indicators]
-
-    for fun in new_indicators:
-        try:
-            metric = newIndicatorWrapper(fun)(user, groupby=groupby, summary=summary,
+        if not datatype:
+            try:
+                metric = newIndicatorWrapper(fun)(user, groupby=groupby, summary=summary,
                          datatype=scalar_type, filter_empty=filter_empty,
                          split_week=split_week, split_day=split_day)
-        except ValueError:
-            metric = newIndicatorWrapper(fun)(user, groupby=groupby, datatype=scalar_type,
+            except ValueError:
+                metric = newIndicatorWrapper(fun)(user, groupby=groupby, datatype=scalar_type,
                          split_week=split_week, filter_empty=filter_empty,
                          split_day=split_day)
         
-        if show_all:
-            returned[fun.__name__] = metric
-            if isNone(metric):
-                none_metrics.append(fun.__name__)
-        else:
-            if isNone(metric):
-                none_metrics.append(fun.__name__)
-            else:
+            if show_all:
                 returned[fun.__name__] = metric
-
+                if isNone(metric):
+                    none_metrics.append(fun.__name__)
+            else:
+                if isNone(metric):
+                    none_metrics.append(fun.__name__)
+                else:
+                    returned[fun.__name__] = metric
+        else:
+            try:
+                metric = fun(user, groupby=groupby, summary=summary,
+                             datatype=datatype, filter_empty=filter_empty,
+                             split_week=split_week, split_day=split_day)
+            except ValueError:
+                metric = fun(user, groupby=groupby, datatype=datatype,
+                             split_week=split_week, filter_empty=filter_empty,
+                             split_day=split_day)
+            
+            if show_all:
+                returned[fun.__name__] = metric
+                if isNone(metric):
+                    none_metrics.append(fun.__name__)
+            else:
+                if isNone(metric):
+                    none_metrics.append(fun.__name__)
+                else:
+                    returned[fun.__name__] = metric
 
     if network and user.has_network:
         for fun in network_functions:

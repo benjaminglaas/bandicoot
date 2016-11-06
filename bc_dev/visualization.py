@@ -62,7 +62,7 @@ def user_data(user):
             self.args = args
 
     I = Indicator
-    import bandicoot.individual as iv
+    import bc_dev.individual as iv
 
     indicators_list = [
         I('nb_out_call', iv.number_of_interactions, 'call', direction='out'),
