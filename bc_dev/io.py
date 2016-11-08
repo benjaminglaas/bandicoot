@@ -229,17 +229,6 @@ def filter_record(records):
     def scheme(rr):
         
         res = {}
-        for i in rr.__slots__:
-            if getattr(rr,i) is not None:
-                res[i] = True
-            elif i == "datetime":
-                res[i] = isinstance(rr.datetime, datetime)
-            else:
-                res[i] = False
-                
-        res["position"] = True
-        res["direction"] = True
-        res["location"] = True
 
         if rr.interaction is None:
             duration_ok = True
@@ -251,8 +240,28 @@ def filter_record(records):
         else:
             duration_ok = True
 
-        res["duration"] = duration_ok
-
+        for i in rr.__slots__:
+            value = getattr(rr,i)
+            if value != '':
+                if i == "interaction":
+                    res[i] = isinstance(value, str)
+                if i == "datetime":
+                    res[i] = isinstance(value, datetime)
+                elif i == "position":
+                    res[i] = True
+                elif i == "duration":
+                    res[i] = duration_ok
+                elif i == "direction" and value in ['in','out','',None]:
+                    res[i] = True
+                elif i == "location": #and ?
+                    res[i] = True
+                elif value is not None:
+                    res[i] = True
+                else:
+                    res[i] = False
+            else:
+                res[i] = False
+            
         return res
 
 
