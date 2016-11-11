@@ -24,7 +24,6 @@ from bc_dev.helper.tools import OrderedDict
 from bc_dev.helper.group import group_records, group_records_with_padding
 from functools import partial
 import logging as log
-from .helper.tools import ColorHandler
 from .helper.group import grouping
 
 import bc_dev as bc
@@ -67,7 +66,7 @@ def flatten(d, parent_key='', separator='__'):
 
 def all(user, groupby='week', summary='default', network=False,
         split_week=False, split_day=False, filter_empty=True, attributes=True,
-        flatten=False,show_all=True,warnings=False, new_indicators = []):
+        flatten=False,show_all=False,warnings=False, new_indicators = []):
     """
     Returns a dictionary containing all bandicoot indicators for the user,
     as well as reporting variables.
@@ -283,11 +282,12 @@ def all(user, groupby='week', summary='default', network=False,
         return globals()['flatten'](returned)
 
     if warnings and len(none_metrics)!=0:
-        returned["none_functions"] = none_metrics
         w = "{} functions that only returned 'None' \n".format(len(none_metrics))
         for nones in none_metrics:
             w += nones + "\n"
         log.warn(w)
+
+    returned["none_functions"] = none_metrics
 
     return returned
 

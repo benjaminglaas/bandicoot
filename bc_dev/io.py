@@ -244,21 +244,34 @@ def filter_record(records):
             value = getattr(rr,i)
             if value != '':
                 if i == "interaction":
-                    res[i] = isinstance(value, str)
+                    try:
+                        float(value) #Only strings should be legal
+                        res[i] = False
+                        continue
+                    except ValueError:
+                        res[i] = True
+                        continue
                 if i == "datetime":
                     res[i] = isinstance(value, datetime)
+                    continue
                 elif i == "position":
                     res[i] = True
+                    continue
                 elif i == "duration":
                     res[i] = duration_ok
+                    continue
                 elif i == "direction" and value in ['in','out','',None]:
                     res[i] = True
+                    continue
                 elif i == "location": #and ?
                     res[i] = True
+                    continue
                 elif value is not None:
                     res[i] = True
+                    continue
                 else:
                     res[i] = False
+                    continue
             else:
                 res[i] = False
             
@@ -438,7 +451,10 @@ def _read_network(user, records_path, attributes_path, read_function,
                   antennas_path=None, warnings=True, extension=".csv",
                   **kwargs):
     connections = {}
-    correspondents = Counter([r.correspondent_id for r in user.records])
+    try:
+        correspondents = Counter([r.correspondent_id for r in user.records])
+    except:
+        raise AttributeError("Netwrork not available for data without contacts")
 
     # Try to load all the possible correspondent files
     for c_id, count in sorted(correspondents.items()):

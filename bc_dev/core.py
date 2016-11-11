@@ -341,15 +341,17 @@ class User(object):
             self, interaction=['other'], groupby=None)
 
         nb_contacts = nb_contacts['allweek']['allday']
-
         #Contacts are not unique!
+        if len(nb_contacts) > 1:
+            print(filled_box + format_int("unique contacts", len(Counter([r.correspondent_id for r in self.records]))))
+            
         for i in nb_contacts:
             if nb_contacts[i]:
                 print(filled_box + format_int("contacts", nb_contacts[i]) + " " + i)
             else:
                 print(empty_box + "No contacts for " + i)
-        if len(nb_contacts) > 1:
-            log.warn("Contacts may overlap!")
+
+        
 
         if self.has_attributes:
             print(filled_box + format_int("attributes", len(self.attributes)))
