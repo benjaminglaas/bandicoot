@@ -71,9 +71,11 @@ def filter_user(user, using='records', interaction=None,
         records = user.recharges
     else:
         records = user.records
-        if interaction == 'callandtext':
+        if interaction == "all":
+            interaction = "and".join(user.interactions)
+        elif type(interaction) is str and "and" in interaction:
             records = filter(
-                lambda r: r.interaction in ['call', 'text'], records)
+                lambda r: r.interaction in interaction.split("and"), records)
         elif interaction is not None:
             records = filter(lambda r: r.interaction == interaction, records)
 
@@ -432,11 +434,12 @@ def grouping(f=None, interaction=['call','text'], summary='default',
                 split_week=False, split_day=False, filter_empty=True,
                 datatype=None, **kwargs):
 
-        if 'other' in interaction:
-            interaction = user.interactions
-
         if interaction is None:
             interaction = ['call', 'text']
+        elif 'other' in interaction:
+            interaction = user.interactions
+        elif type(interaction) is list:
+            interaction = ["and".join(i) if type(i) is list else i for i in interaction]
 
         parameters = divide_parameters(split_week, split_day, interaction)
 
