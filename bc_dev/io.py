@@ -454,7 +454,7 @@ def _read_network(user, records_path, attributes_path, read_function,
     try:
         correspondents = Counter([r.correspondent_id for r in user.records])
     except:
-        raise AttributeError("Netwrork not available for data without contacts")
+        raise AttributeError("Network not available for data without contacts")
 
     # Try to load all the possible correspondent files
     for c_id, count in sorted(correspondents.items()):
