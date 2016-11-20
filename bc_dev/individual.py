@@ -30,6 +30,7 @@ from collections import Counter
 import math
 import datetime
 from collections import defaultdict
+from pdb import set_trace as bp #for debug
 
 
 @grouping(interaction=['call','text','other'])
@@ -57,9 +58,9 @@ def number_of_contacts(records, direction=None, more=0):
         Counts only contacts with more than this number of interactions.
     """
     if direction is None:
-        counter = Counter(r.correspondent_id for r in records)
+        counter = Counter(r.correspondent_id for r in records if r.correspondent_id != '')
     else:
-        counter = Counter(r.correspondent_id for r in records if r.direction == direction)
+        counter = Counter(r.correspondent_id for r in records if r.correspondent_id != '' and r.direction == direction)
     return sum(1 for d in counter.values() if d > more)
 
 
@@ -74,7 +75,7 @@ def entropy_of_contacts(records, normalize=False):
         Returns a normalized entropy between 0 and 1.
 
     """
-    counter = Counter(r.correspondent_id for r in records)
+    counter = Counter(r.correspondent_id for r in records if r.correspondent_id != '')
 
     raw_entropy = entropy(counter.values())
     n = len(counter)
@@ -96,10 +97,10 @@ def interactions_per_contact(records, direction=None):
         ``'in'`` for incoming, and ``'out'`` for outgoing.
     """
     if direction is None:
-        counter = Counter(r.correspondent_id for r in records)
+        counter = Counter(r.correspondent_id for r in records if r.correspondent_id != '')
     else:
-        counter = Counter(r.correspondent_id for r in records
-                          if r.direction == direction)
+        counter = Counter(r.correspondent_id for r in records 
+                    if r.correspondent_id != '' and r.direction == direction)
     return summary_stats(counter.values())
 
 
@@ -222,7 +223,8 @@ def response_rate_text(records):
 
     interactions = defaultdict(list)
     for r in records:
-        interactions[r.correspondent_id].append(r)
+        if r.correspondent_id != '':
+            interactions[r.correspondent_id].append(r)
 
     def _response_rate(grouped):
         received, responded = 0, 0
@@ -270,7 +272,8 @@ def response_delay_text(records):
     """
     interactions = defaultdict(list)
     for r in records:
-        interactions[r.correspondent_id].append(r)
+        if r.correspondent_id != '':
+            interactions[r.correspondent_id].append(r)
 
     def _response_delay(grouped):
         ts = ((b.datetime - a.datetime).total_seconds()
@@ -298,7 +301,8 @@ def percent_initiated_conversations(records):
     """
     interactions = defaultdict(list)
     for r in records:
-        interactions[r.correspondent_id].append(r)
+        if r.correspondent_id != '':
+            interactions[r.correspondent_id].append(r)
 
     def _percent_initiated(grouped):
         mapped = [(1 if conv[0].direction == 'out' else 0, 1)
@@ -335,7 +339,7 @@ def percent_pareto_interactions(records, percentage=0.8):
     if len(records) == 0:
         return None
 
-    user_count = Counter(r.correspondent_id for r in records)
+    user_count = Counter(r.correspondent_id for r in records if r.correspondent_id != '')
 
     target = int(math.ceil(sum(user_count.values()) * percentage))
     user_sort = sorted(user_count.keys(), key=lambda x: user_count[x])
@@ -359,7 +363,7 @@ def percent_pareto_durations(records, percentage=0.8):
 
     user_count = defaultdict(int)
     for r in records:
-        if r.interaction == "call":
+        if r.interaction == "call" and r.correspondent_id != '':
             user_count[r.correspondent_id] += r.duration
 
     target = int(math.ceil(sum(user_count.values()) * percentage))
@@ -393,9 +397,10 @@ def balance_of_contacts(records, weighted=True):
     counter = defaultdict(int)
 
     for r in records:
-        if r.direction == 'out':
-            counter_out[r.correspondent_id] += 1
-        counter[r.correspondent_id] += 1
+        if r.correspondent_id != '':
+            if r.direction == 'out':
+                counter_out[r.correspondent_id] += 1
+            counter[r.correspondent_id] += 1
 
     if not weighted:
         balance = [counter_out[c] / counter[c] for c in counter]

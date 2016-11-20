@@ -65,12 +65,8 @@ class Record(object):
                 self.__slots__.append(name)
 
         if not hasattr(self,"direction"):
-            self.direction = None
+            self.direction = ''
             self.__slots__.append("direction")
-
-        if not hasattr(self,"location"):
-            self.location = None
-            self.__slots__.append("location")
 
         if not hasattr(self,"position"):
             self.position = None
@@ -92,12 +88,18 @@ class Record(object):
     def matches(self, other):
         """
         Return true if two records 'match': if they share the same values for
-        ``interaction``, ``direction``, ``duration``, and ``datetime``.
+        all attributes in the two records.
         """
-        return self.interaction == other.interaction and \
-            self.direction != other.direction and \
-            self.duration == other.duration and \
-            abs((self.datetime - other.datetime).total_seconds()) < 30
+        check = True
+        for i in self.__slots__:
+            if i == "datetime":
+                check = abs((self.datetime - other.datetime).total_seconds()) < 30
+            if check and getattr(self,i) == getattr(other,i):
+                continue
+            else:
+                return False
+        return check
+            
 
     def all_matches(self, iterable):
         return list(filter(self.matches, iterable))
@@ -256,13 +258,13 @@ class User(object):
 
         for r in self._records:
 
-            if r.interaction is not None:
+            if r.interaction is not None and r.interaction != '':
                 setattr(self,"has_"+ r.interaction,True)
 
             if hasattr(r.position,"type") and r.position.type() == 'antenna':
                 self.has_antennas = True
 
-        self.recompute_home() #SHOULD MAYBE BE REDEFINED!
+        self.recompute_home()
 
     def recompute_missing_neighbors(self):
         """
@@ -341,17 +343,17 @@ class User(object):
             self, interaction=['other'], groupby=None)
 
         nb_contacts = nb_contacts['allweek']['allday']
-        #Contacts are not unique!
-        if len(nb_contacts) > 1:
-            print(filled_box + format_int("unique contacts", len(Counter([r.correspondent_id for r in self.records]))))
+        
+
+        if nb_contacts and len(nb_contacts) > 1:
+            print(filled_box + format_int("unique contacts", len(set([r.correspondent_id for r in self.records
+                            if r.correspondent_id != '']))))
             
         for i in nb_contacts:
             if nb_contacts[i]:
                 print(filled_box + format_int("contacts", nb_contacts[i]) + " " + i)
             else:
-                print(empty_box + "No contacts for " + i)
-
-        
+                print(empty_box + "No contacts for " + i)   
 
         if self.has_attributes:
             print(filled_box + format_int("attributes", len(self.attributes)))

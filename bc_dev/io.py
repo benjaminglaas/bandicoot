@@ -33,7 +33,7 @@ from .helper.tools import OrderedDict, percent_overlapping_calls, \
 
 from datetime import datetime
 from json import dumps
-from collections import Counter
+from collections import defaultdict
 import logging as log
 import time
 import csv
@@ -151,13 +151,13 @@ def _parse_record(data, duration_format='seconds'):
     Parse a raw data dictionary and return a Record object.
     """
 
-    def _map_duration(s):
-        if s == '':
+    def _map_duration(ss):
+        if ss == '':
             return None
         elif duration_format.lower() == 'seconds':
-            return int(s)
+            return int(ss)
         else:
-            t = time.strptime(s, duration_format)
+            t = time.strptime(ss, duration_format)
             return 3600 * t.tm_hour + 60 * t.tm_min + t.tm_sec
 
     def _map_position(data):
@@ -186,15 +186,13 @@ def _parse_record(data, duration_format='seconds'):
                       lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"),
                       data['datetime'])
         elif i == "duration":
-            r_dict[i] = _tryto(_map_duration, data['duration'])
+            r_dict["duration"] = _tryto(_map_duration, data["duration"])
         elif i == "call_duration":
-            r_dict[i] = _tryto(_map_duration, data['call_duration'])
+            r_dict["call_duration"] = _tryto(_map_duration, data["call_duration"])
         elif i == "position":
             r_dict[i] = _tryto(_map_position, data)
         else:
             r_dict[i] = data[i]
-
-
 
     return Record(**r_dict)
 
@@ -230,50 +228,34 @@ def filter_record(records):
         
         res = {}
 
-        if rr.interaction is None:
-            duration_ok = True
-        elif rr.interaction == 'call':
-            if hasattr(rr,'duration'):
-                duration_ok = isinstance(rr.duration, (int, float))
-            else:
-                duration_ok = True
-        else:
-            duration_ok = True
-
         for i in rr.__slots__:
             value = getattr(rr,i)
-            if value != '':
-                if i == "interaction":
-                    try:
-                        float(value) #Only strings should be legal
-                        res[i] = False
-                        continue
-                    except ValueError:
-                        res[i] = True
-                        continue
-                if i == "datetime":
-                    res[i] = isinstance(value, datetime)
-                    continue
-                elif i == "position":
+            if i == "interaction":
+                if value != '':
                     res[i] = True
-                    continue
-                elif i == "duration":
-                    res[i] = duration_ok
-                    continue
-                elif i == "direction" and value in ['in','out','',None]:
-                    res[i] = True
-                    continue
-                elif i == "location": #and ?
-                    res[i] = True
-                    continue
-                elif value is not None:
-                    res[i] = True
-                    continue
                 else:
                     res[i] = False
-                    continue
-            else:
+                continue
+            elif i == "datetime":
+                res[i] = isinstance(value, datetime)
+                continue
+            elif i == "position":
+                res[i] = True
+                continue
+            elif i == "duration":
+                res[i] = isinstance(rr.duration, (int, float))
+                continue
+            elif i == "direction" and value in ['in','out','']:
+                res[i] = True
+                continue
+            elif i == "location":
+                res[i] = True
+                continue
+            elif i == "":
+                continue
+            elif value is None:
                 res[i] = False
+                
             
         return res
 
@@ -381,6 +363,16 @@ def load(name, records, antennas, attributes=None, recharges=None,
     user.recharges_path = recharges_path
 
     user.records, ignored, bad_records = filter_record(records)
+    default_types = set(["interaction","position","duration","direction","location","correspondent_id","datetime"])
+    records_slots = set(sum([r.__slots__ for r in user.records],[]))
+    new_types = records_slots - default_types
+
+    if len(new_types) > 0:
+        most_common = common_types(user.records,new_types)
+        for key in most_common:
+            if most_common[key][1] > 0:
+                log.warn("There are {}% of the observations of the attribute {} that are not of the most common type, which is {}.\
+                Please consider to clean the dataset".format((len(user.records)-most_common[key][1])/len(user.records)*100,key,most_common[key][0]))
 
     _level = log.getLogger().level
     if warnings is False:
@@ -852,3 +844,19 @@ def read_telenor(incoming_cdr, outgoing_cdr, cell_towers, describe=True,
         user.describe()
 
     return user
+
+
+def common_types(records,new_types):
+        common_types = {} #Holds number of incorrect types for each attribute in the dataset
+        for i in new_types:
+            attributes = [getattr(record,i) for record in records]
+            types = defaultdict(int)
+            for a in attributes:
+                try:
+                    types[type(eval(a))] += 1
+                except:
+                    types[str] += 1
+            most = sorted(types.items(), key = lambda x: x[1],reverse=True)
+            common_types[i] = (most[0][0],sum([j[1] for j in most]) - sum([j[1] for j in most[1:]]))
+
+        return common_types
