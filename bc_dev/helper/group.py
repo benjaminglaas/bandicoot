@@ -62,11 +62,10 @@ def filter_user(user, using='records', interaction=None,
         * 'allday': use all the records
     interaction : object
         The interaction to filter records:
-        * "callandtext", for only callandtext;
+        * "callandtext" or ["call","text"], for only callandtext;
         * a string, to filter for one type;
         * None, to use all records.
     """
-
     if using == 'recharges':
         records = user.recharges
     else:
@@ -343,19 +342,17 @@ def grouping_query(user, query):
     return groups
 
 
-def _generic_wrapper(f, user, operations, datatype):
+def _generic_wrapper(f, user, operations, datatype, attributes=[]):
     def compute_indicator(g):
-        try:
-            if operations['apply']['user_kwd']:
-                return f(list(g), user, **operations['apply']['kwargs'])
-            else:
-                return f(list(g), **operations['apply']['kwargs'])
-        except(AttributeError):
-            return
+        if operations['apply']['user_kwd']:
+            return f(list(g), user, **operations['apply']['kwargs'])
+        else:
+            return f(list(g), **operations['apply']['kwargs'])
 
-    def map_and_apply(params_combinations):
+    def map_and_apply(params_combinations,attributes=attributes):
         for params, groups in params_combinations:
-            results = [compute_indicator(g) for g in groups]
+            groups2 = [[r for r in filter_by_attribute(g, attributes)] for g in groups]
+            results = [compute_indicator(g) for g in groups2]
 
             if operations['grouping']['groupby'] is None:
                 results = results[0] if len(results) != 0 else None
@@ -365,10 +362,8 @@ def _generic_wrapper(f, user, operations, datatype):
 
             yield list(params.values()), stats
 
-
     query = operations['grouping']
     groups = user._cached_grouping_query(query)
-
     returned = AutoVivification()
     for params, stats in map_and_apply(groups):
         returned.insert(params, stats)
@@ -401,7 +396,7 @@ def divide_parameters(split_week, split_day, interaction):
 
 
 def grouping(f=None, interaction=['call','text'], summary='default',
-             user_kwd=False):
+             user_kwd=False,attributes=[]):
     """
     ``grouping`` is a decorator for indicator functions, used to simplify the
     source code.
@@ -425,15 +420,13 @@ def grouping(f=None, interaction=['call','text'], summary='default',
     this decorator.
 
     """
-
     if f is None:
         return partial(grouping, user_kwd=user_kwd, interaction=interaction,
-                       summary=summary)
+                       summary=summary,attributes=attributes)
 
     def wrapper(user, groupby='week', interaction=interaction, summary=summary,
                 split_week=False, split_day=False, filter_empty=True,
                 datatype=None, **kwargs):
-
         if interaction is None:
             interaction = ['call', 'text']
         elif 'other' in interaction:
@@ -457,8 +450,7 @@ def grouping(f=None, interaction=['call','text'], summary='default',
             }
         }
         
-
-        return _generic_wrapper(f, user, operations, datatype)
+        return _generic_wrapper(f, user, operations, datatype, attributes=attributes)
 
     return advanced_wrap(f, wrapper)
 
@@ -519,3 +511,16 @@ def recharges_grouping(f=None, summary='default', user_kwd=False):
         return _generic_wrapper(f, user, operations, datatype)
 
     return advanced_wrap(f, wrapper)
+
+def filter_by_attribute(records,attributes=[]):
+    """
+    This function is used for the filtering of records that should not be included in the indicator functions.
+    """
+    for r in records:
+        for attr in attributes:
+            if not hasattr(r, attr):
+                break
+            elif getattr(r, attr) == "":
+                break
+        else:
+            yield r

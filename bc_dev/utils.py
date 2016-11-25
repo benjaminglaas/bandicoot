@@ -282,11 +282,11 @@ def all(user, groupby='week', summary='default', network=False,
             try:
                 metric = new_indicator_wrapper(fun)(user, groupby=groupby, summary=summary,
                              datatype=datatype, filter_empty=filter_empty,
-                             split_week=split_week, split_day=split_day,interaction="other")
+                             split_week=split_week, split_day=split_day)
             except ValueError:
                 metric = new_indicator_wrapper(fun)(user, groupby=groupby, datatype=datatype,
                              split_week=split_week, filter_empty=filter_empty,
-                             split_day=split_day,interaction="other")
+                             split_day=split_day)
             
             if show_all:
                 returned[fun.__name__] = metric

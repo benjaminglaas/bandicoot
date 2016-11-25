@@ -26,6 +26,7 @@ from .helper.group import grouping
 from .helper.maths import entropy, summary_stats
 from .helper.tools import pairwise
 from collections import Counter
+from .helper.group import filter_by_attribute
 
 import math
 import datetime
@@ -44,7 +45,7 @@ def interevent_time(records):
     return summary_stats(inter)
 
 
-@grouping(interaction=['call','text','other'])
+@grouping(interaction=['call','text','other'],attributes=["correspondent_id"])
 def number_of_contacts(records, direction=None, more=0):
     """
     The number of contacts the user interacted with.
@@ -58,13 +59,13 @@ def number_of_contacts(records, direction=None, more=0):
         Counts only contacts with more than this number of interactions.
     """
     if direction is None:
-        counter = Counter(r.correspondent_id for r in records if r.correspondent_id != '')
+        counter = Counter(r.correspondent_id for r in records)
     else:
-        counter = Counter(r.correspondent_id for r in records if r.correspondent_id != '' and r.direction == direction)
+        counter = Counter(r.correspondent_id for r in records if r.direction == direction)
     return sum(1 for d in counter.values() if d > more)
 
 
-@grouping(interaction=['call','text','other'])
+@grouping(interaction=['call','text','other'],attributes=["correspondent_id"])
 def entropy_of_contacts(records, normalize=False):
     """
     The entropy of the user's contacts.
@@ -75,7 +76,7 @@ def entropy_of_contacts(records, normalize=False):
         Returns a normalized entropy between 0 and 1.
 
     """
-    counter = Counter(r.correspondent_id for r in records if r.correspondent_id != '')
+    counter = Counter(r.correspondent_id for r in records)
 
     raw_entropy = entropy(counter.values())
     n = len(counter)
@@ -85,7 +86,7 @@ def entropy_of_contacts(records, normalize=False):
         return raw_entropy
 
 
-@grouping(interaction=['call','text','other'])
+@grouping(interaction=['call','text','other'],attributes=["correspondent_id"])
 def interactions_per_contact(records, direction=None):
     """
     The number of interactions a user had with each of its contacts.
@@ -97,14 +98,14 @@ def interactions_per_contact(records, direction=None):
         ``'in'`` for incoming, and ``'out'`` for outgoing.
     """
     if direction is None:
-        counter = Counter(r.correspondent_id for r in records if r.correspondent_id != '')
+        counter = Counter(r.correspondent_id for r in records)
     else:
         counter = Counter(r.correspondent_id for r in records 
-                    if r.correspondent_id != '' and r.direction == direction)
+                    if r.direction == direction)
     return summary_stats(counter.values())
 
 
-@grouping(user_kwd=True, interaction='call')
+@grouping(user_kwd=True, interaction='call',attributes=["direction"])
 def percent_initiated_interactions(records, user):
     """
     The percentage of calls initiated by the user.
@@ -135,7 +136,7 @@ def percent_nocturnal(records, user):
     return sum(1 for r in records if night_filter(r.datetime)) / len(records)
 
 
-@grouping(interaction=['call','other'])
+@grouping(interaction=['call','other'],attributes=["duration"])
 def duration(records, direction=None):
     """
     The duration of the user's interactions.
@@ -195,7 +196,7 @@ def _conversations(group, delta=datetime.timedelta(hours=1)):
         yield results
 
 
-@grouping(interaction='callandtext')
+@grouping(interaction='callandtext',attributes=["correspondent_id","direction","datetime","interaction"])
 def response_rate_text(records):
     """
     The response rate of the user (between 0 and 1).
@@ -223,8 +224,7 @@ def response_rate_text(records):
 
     interactions = defaultdict(list)
     for r in records:
-        if r.correspondent_id != '':
-            interactions[r.correspondent_id].append(r)
+        interactions[r.correspondent_id].append(r)
 
     def _response_rate(grouped):
         received, responded = 0, 0
@@ -248,7 +248,7 @@ def response_rate_text(records):
     return responded / received if received != 0 else None
 
 
-@grouping(interaction='callandtext')
+@grouping(interaction='callandtext',attributes=["correspondent_id","direction","datetime","interaction"])
 def response_delay_text(records):
     """
     The response delay of the user within a conversation (in seconds)
@@ -272,8 +272,7 @@ def response_delay_text(records):
     """
     interactions = defaultdict(list)
     for r in records:
-        if r.correspondent_id != '':
-            interactions[r.correspondent_id].append(r)
+        interactions[r.correspondent_id].append(r)
 
     def _response_delay(grouped):
         ts = ((b.datetime - a.datetime).total_seconds()
@@ -289,7 +288,7 @@ def response_delay_text(records):
     return summary_stats(delays)
 
 
-@grouping(interaction=['callandtext','other'])
+@grouping(interaction=['callandtext','other'],attributes=["correspondent_id","direction","datetime","interaction"])
 def percent_initiated_conversations(records):
     """
     The percentage of conversations that have been initiated by the user.
@@ -301,8 +300,7 @@ def percent_initiated_conversations(records):
     """
     interactions = defaultdict(list)
     for r in records:
-        if r.correspondent_id != '':
-            interactions[r.correspondent_id].append(r)
+        interactions[r.correspondent_id].append(r)
 
     def _percent_initiated(grouped):
         mapped = [(1 if conv[0].direction == 'out' else 0, 1)
@@ -331,7 +329,7 @@ def active_days(records):
     return len(days)
 
 
-@grouping(interaction=['call','text','other'])
+@grouping(interaction=['call','text','other'],attributes=["correspondent_id"])
 def percent_pareto_interactions(records, percentage=0.8):
     """
     The percentage of user's contacts that account for 80% of its interactions.
@@ -339,7 +337,7 @@ def percent_pareto_interactions(records, percentage=0.8):
     if len(records) == 0:
         return None
 
-    user_count = Counter(r.correspondent_id for r in records if r.correspondent_id != '')
+    user_count = Counter(r.correspondent_id for r in records)
 
     target = int(math.ceil(sum(user_count.values()) * percentage))
     user_sort = sorted(user_count.keys(), key=lambda x: user_count[x])
@@ -351,7 +349,7 @@ def percent_pareto_interactions(records, percentage=0.8):
     return (len(user_count) - len(user_sort)) / len(records)
 
 
-@grouping(interaction=['call'])
+@grouping(interaction=['call'],attributes=["correspondent_id","interaction","duration"])
 def percent_pareto_durations(records, percentage=0.8):
     """
     The percentage of user's contacts that account for 80% of its total time
@@ -363,7 +361,7 @@ def percent_pareto_durations(records, percentage=0.8):
 
     user_count = defaultdict(int)
     for r in records:
-        if r.interaction == "call" and r.correspondent_id != '':
+        if r.interaction == "call":
             user_count[r.correspondent_id] += r.duration
 
     target = int(math.ceil(sum(user_count.values()) * percentage))
@@ -376,7 +374,7 @@ def percent_pareto_durations(records, percentage=0.8):
     return (len(user_count) - len(user_sort)) / len(records)
 
 
-@grouping(interaction=['call','text','other'])
+@grouping(interaction=['call','text','other'],attributes=["direction","correspondent_id"])
 def balance_of_contacts(records, weighted=True):
     """
     The balance of interactions per contact. For every contact,
@@ -397,10 +395,9 @@ def balance_of_contacts(records, weighted=True):
     counter = defaultdict(int)
 
     for r in records:
-        if r.correspondent_id != '':
-            if r.direction == 'out':
-                counter_out[r.correspondent_id] += 1
-            counter[r.correspondent_id] += 1
+        if r.direction == 'out':
+            counter_out[r.correspondent_id] += 1
+        counter[r.correspondent_id] += 1
 
     if not weighted:
         balance = [counter_out[c] / counter[c] for c in counter]
@@ -410,7 +407,7 @@ def balance_of_contacts(records, weighted=True):
     return summary_stats(balance)
 
 
-@grouping(interaction=['call','text','other'])
+@grouping(interaction=['call','text','other'],attributes=[])
 def number_of_interactions(records, direction=None):
     """
     The number of interactions.

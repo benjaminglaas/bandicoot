@@ -344,10 +344,8 @@ class User(object):
 
         nb_contacts = nb_contacts['allweek']['allday']
         
-
         if nb_contacts and len(nb_contacts) > 1:
-            print(filled_box + format_int("unique contacts", len(set([r.correspondent_id for r in self.records
-                            if r.correspondent_id != '']))))
+            print(filled_box + format_int("unique contacts", len(set([r.correspondent_id for r in self.records]))))
             
         for i in nb_contacts:
             if nb_contacts[i]:
@@ -462,7 +460,6 @@ class User(object):
 
     def _cached_grouping_query(self, query):
         key = str(query)
-
         with self._cache_lock:
             try:
                 entry = self._cache[key]

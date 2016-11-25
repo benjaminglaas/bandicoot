@@ -26,6 +26,7 @@ Contains tools for processing files (reading and writing csv and json files).
 
 from __future__ import with_statement, division
 
+from .helper.group import filter_by_attribute
 from .utils import flatten
 from .core import User, Record, Position, Recharge
 from .helper.tools import OrderedDict, percent_overlapping_calls, \
@@ -151,13 +152,13 @@ def _parse_record(data, duration_format='seconds'):
     Parse a raw data dictionary and return a Record object.
     """
 
-    def _map_duration(ss):
-        if ss == '':
-            return None
+    def _map_duration(s):
+        if s == '':
+            return s
         elif duration_format.lower() == 'seconds':
-            return int(ss)
+            return int(s)
         else:
-            t = time.strptime(ss, duration_format)
+            t = time.strptime(s, duration_format)
             return 3600 * t.tm_hour + 60 * t.tm_min + t.tm_sec
 
     def _map_position(data):
@@ -179,18 +180,28 @@ def _parse_record(data, duration_format='seconds'):
 
         return antenna
 
+    def _map_other(other):
+        try:
+            return eval(other)
+        except:
+            return other
+
     r_dict = {}
+    default_types = set(["interaction","position","duration","direction","location","correspondent_id","datetime"])
+
     for i in data.keys():
         if i == "datetime":
             r_dict[i] = _tryto(
                       lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"),
                       data['datetime'])
-        elif i == "duration":
-            r_dict["duration"] = _tryto(_map_duration, data["duration"])
         elif i == "call_duration":
             r_dict["call_duration"] = _tryto(_map_duration, data["call_duration"])
+        elif i == "duration":
+            r_dict["duration"] = _tryto(_map_duration, data["duration"])
         elif i == "position":
             r_dict[i] = _tryto(_map_position, data)
+        elif i not in default_types:
+            r_dict[i] = _tryto(_map_other,data[i])
         else:
             r_dict[i] = data[i]
 
@@ -224,17 +235,14 @@ def filter_record(records):
 
     """
 
-    def scheme(rr):
+    def scheme(r):
         
         res = {}
 
-        for i in rr.__slots__:
-            value = getattr(rr,i)
-            if i == "interaction":
-                if value != '':
-                    res[i] = True
-                else:
-                    res[i] = False
+        for i in r.__slots__:
+            value = getattr(r,i)
+            if i == "interaction" and value != "":
+                res[i] = True
                 continue
             elif i == "datetime":
                 res[i] = isinstance(value, datetime)
@@ -243,18 +251,22 @@ def filter_record(records):
                 res[i] = True
                 continue
             elif i == "duration":
-                res[i] = isinstance(rr.duration, (int, float))
-                continue
+                if value == "": #From _map_duration
+                    res[i] = True
+                    continue
+                else:
+                    res[i] = isinstance(value, (int, float))
+                    continue
             elif i == "direction" and value in ['in','out','']:
                 res[i] = True
                 continue
             elif i == "location":
                 res[i] = True
                 continue
-            elif i == "":
-                continue
             elif value is None:
                 res[i] = False
+            else:
+                res[i] = True
                 
             
         return res
@@ -371,8 +383,10 @@ def load(name, records, antennas, attributes=None, recharges=None,
         most_common = common_types(user.records,new_types)
         for key in most_common:
             if most_common[key][1] > 0:
-                log.warn("There are {}% of the observations of the attribute {} that are not of the most common type, which is {}.\
-                Please consider to clean the dataset".format((len(user.records)-most_common[key][1])/len(user.records)*100,key,most_common[key][0]))
+                f1 = round(float(len(user.records)-most_common[key][1])/len(user.records)*100,2)
+                if f1 > 0.0:
+                    log.warn("There are {}% of the observations of the attribute {} that are missing or not of the most common type,\
+                    which is {}. Please consider to clean the dataset".format(f1,key,most_common[key][0]))
 
     _level = log.getLogger().level
     if warnings is False:
@@ -427,7 +441,8 @@ def load(name, records, antennas, attributes=None, recharges=None,
         else:
             log.warn("{0:d} record(s) are duplicated.".format(num_dup))
 
-    pct_overlap_calls = percent_overlapping_calls(user.records, 300)
+    rec = [r for r in filter_by_attribute(user.records,["duration"])]
+    pct_overlap_calls = percent_overlapping_calls(rec, 300)
     if pct_overlap_calls > 0:
         log.warn("{0:.2%} of calls overlap the next call by more than "
                  "5 minutes.".format(pct_overlap_calls))
@@ -852,10 +867,13 @@ def common_types(records,new_types):
             attributes = [getattr(record,i) for record in records]
             types = defaultdict(int)
             for a in attributes:
+                if a =='':
+                    types["empty value"] += 1
+                    continue
                 try:
                     types[type(eval(a))] += 1
                 except:
-                    types[str] += 1
+                    types[type(a)] += 1
             most = sorted(types.items(), key = lambda x: x[1],reverse=True)
             common_types[i] = (most[0][0],sum([j[1] for j in most]) - sum([j[1] for j in most[1:]]))
 
