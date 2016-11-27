@@ -66,7 +66,7 @@ def flatten(d, parent_key='', separator='__'):
 
 def all(user, groupby='week', summary='default', network=False,
         split_week=False, split_day=False, filter_empty=True, attributes=True,
-        flatten=False,show_all=False,warnings=False, new_indicators = [],interaction=None):
+        flatten=False,show_all=False,warnings=False, new_indicators = [],new_valid_attributes = [],interaction=None):
     """
     Returns a dictionary containing all bandicoot indicators for the user,
     as well as reporting variables.
@@ -278,13 +278,17 @@ def all(user, groupby='week', summary='default', network=False,
                     returned[fun.__name__] = metric
 
     if new_indicators:
-        for fun in new_indicators:
+        if not new_valid_attributes:
+            raise TypeError("Please specify which attributes should be used in the new indicators")
+        if type(new_valid_attributes) != list:
+            raise TypeError("The keyword 'new_valid_attributes' must be a list of strings")
+        for fun, attributes in zip(new_indicators,new_valid_attributes):
             try:
-                metric = new_indicator_wrapper(fun)(user, groupby=groupby, summary=summary,
+                metric = new_indicator_wrapper(fun,attributes)(user, groupby=groupby, summary=summary,
                              datatype=datatype, filter_empty=filter_empty,
                              split_week=split_week, split_day=split_day)
             except ValueError:
-                metric = new_indicator_wrapper(fun)(user, groupby=groupby, datatype=datatype,
+                metric = new_indicator_wrapper(fun,attributes)(user, groupby=groupby, datatype=datatype,
                              split_week=split_week, filter_empty=filter_empty,
                              split_day=split_day)
             
@@ -330,7 +334,7 @@ def isNone(metric):
     
     return True
 
-def new_indicator_wrapper(fun):
+def new_indicator_wrapper(fun,attributes=[]):
     """Wrapper function for custom made indicators"""
-    return grouping(f=fun,interaction='other')
+    return grouping(f=fun,interaction='other',attributes=attributes)
 
