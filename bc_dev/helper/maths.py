@@ -22,7 +22,6 @@
 
 from __future__ import division
 import math
-from pdb import set_trace as bp #for debug
 
 
 def mean(data):

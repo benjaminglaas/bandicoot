@@ -29,7 +29,6 @@ import itertools
 from bc_dev.helper.maths import mean, std, SummaryStats
 from bc_dev.helper.tools import advanced_wrap, AutoVivification, OrderedDict
 import numbers
-from pdb import set_trace as bp #for debug
 
 
 DATE_GROUPERS = {
@@ -515,6 +514,7 @@ def recharges_grouping(f=None, summary='default', user_kwd=False):
 def filter_by_attribute(records,attributes=[]):
     """
     This function is used for the filtering of records that should not be included in the indicator functions.
+    The result is a generator object.
     """
     for r in records:
         for attr in attributes:

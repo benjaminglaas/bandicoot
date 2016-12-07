@@ -27,7 +27,6 @@ import logging as log
 from .helper.group import grouping
 
 import bc_dev as bc
-from pdb import set_trace as bp #for debug
 
 
 def flatten(d, parent_key='', separator='__'):

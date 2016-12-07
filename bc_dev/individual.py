@@ -31,11 +31,9 @@ from .helper.group import filter_by_attribute
 import math
 import datetime
 from collections import defaultdict
-from pdb import set_trace as bp #for debug
-
 
 @grouping(interaction=['call','text','other'])
-def interevent_time(records):
+def interevent_time(records,attributes=["datetime"]):
     """
     The interevent time between two records of the user.
     """
@@ -117,7 +115,7 @@ def percent_initiated_interactions(records, user):
     return initiated / len(records)
 
 
-@grouping(user_kwd=True,interaction=['call','text','other'])
+@grouping(user_kwd=True,interaction=['call','text','other'],attributes=["datetime"])
 def percent_nocturnal(records, user):
     """
     The percentage of interactions the user had at night.
@@ -318,7 +316,7 @@ def percent_initiated_conversations(records):
     return init / total if total != 0 else 0
 
 
-@grouping(interaction=['callandtext','other'])
+@grouping(interaction=['callandtext','other'],attributes=["datetime"])
 def active_days(records):
     """
     The number of days during which the user was active. A user is considered

@@ -30,8 +30,6 @@ from bc_dev.helper.group import positions_binning, grouping_query
 import bc_dev as bc
 import logging as log
 
-from pdb import set_trace as bp #for debug
-
 
 class Record(object):
     """

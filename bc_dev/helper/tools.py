@@ -31,8 +31,6 @@ import hashlib
 import sys
 import os
 
-from pdb import set_trace as bp #for debug
-
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):

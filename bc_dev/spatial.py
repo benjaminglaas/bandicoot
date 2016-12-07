@@ -117,7 +117,7 @@ def number_of_antennas(positions):
 @spatial_grouping
 def frequent_antennas(positions, percentage=0.8):
     """
-    The number of location that account for 80% of the locations where the user was.
+    The number of locations that account for 80% of the locations where the user was.
     Percentage can be supplied as a decimal (e.g., .8 for default 80%).
     """
     location_count = Counter(list(map(str, positions)))

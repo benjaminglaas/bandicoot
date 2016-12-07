@@ -40,8 +40,6 @@ import time
 import csv
 import os
 
-from pdb import set_trace as bp #for debug
-
 log.getLogger().setLevel(log.WARN)
 log.getLogger().addHandler(ColorHandler())
 
@@ -241,9 +239,13 @@ def filter_record(records):
 
         for i in r.__slots__:
             value = getattr(r,i)
-            if i == "interaction" and value != "":
-                res[i] = True
-                continue
+            if i == "interaction":
+                if value in ["" , None]: #Interaction must have a value for grouping
+                    res[i] = False
+                    continue
+                else:
+                    res[i] = True
+                    continue
             elif i == "datetime":
                 res[i] = isinstance(value, datetime)
                 continue
@@ -382,7 +384,12 @@ def load(name, records, antennas, attributes=None, recharges=None,
     if len(new_types) > 0:
         most_common = common_types(user.records,new_types)
         for key in most_common:
-            if most_common[key][1] > 0:
+            if most_common[key][0] == "Missing":
+                f1 = round(float(len(user.records)-most_common[key][1])/len(user.records)*100,2)
+                if f1 > 0.0:
+                    log.warn("There are {}% of the observations of the attribute {} that are missing. Please consider to clean the dataset"
+                        .format(f1,key))
+            elif most_common[key][1] > 0:
                 f1 = round(float(len(user.records)-most_common[key][1])/len(user.records)*100,2)
                 if f1 > 0.0:
                     log.warn("There are {}% of the observations of the attribute {} that are missing or not of the most common type,\
@@ -868,7 +875,7 @@ def common_types(records,new_types):
             types = defaultdict(int)
             for a in attributes:
                 if a =='':
-                    types["empty value"] += 1
+                    types["Missing"] += 1
                     continue
                 try:
                     types[type(eval(a))] += 1
