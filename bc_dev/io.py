@@ -385,11 +385,11 @@ def load(name, records, antennas, attributes=None, recharges=None,
         most_common = common_types(user.records,new_types)
         for key in most_common:
             if most_common[key][0] == "Missing":
-                f1 = round(float(len(user.records)-most_common[key][1])/len(user.records)*100,2)
+                f1 = round(float(most_common[key][1])/len(user.records)*100,2)
                 if f1 > 0.0:
-                    log.warn("There are {}% of the observations of the attribute {} that are missing. Please consider to clean the dataset"
+                    log.warn("There are {}% of the observations of the attribute {} that have empty values. Please consider to clean the dataset"
                         .format(f1,key))
-            elif most_common[key][1] > 0:
+            else:
                 f1 = round(float(len(user.records)-most_common[key][1])/len(user.records)*100,2)
                 if f1 > 0.0:
                     log.warn("There are {}% of the observations of the attribute {} that are missing or not of the most common type,\
